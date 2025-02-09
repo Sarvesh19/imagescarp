@@ -11,10 +11,13 @@ def get_google_image(place):
     response = requests.get(search_url, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser")
     
+    # Get HD images
     img_tags = soup.find_all("img")
-    image_urls = [img["src"] for img in img_tags if "http" in img["src"]]
+    image_urls = [img.get("data-src", img.get("src")) for img in img_tags if img.get("data-src") or img.get("src")]
+    
+    hd_images = [url for url in image_urls if "http" in url]
 
-    return image_urls[0] if image_urls else None  # Returns first valid image URL
+    return hd_images[0] if hd_images else None  # Returns first HD image URL
 
 @app.route("/get-image", methods=["GET"])
 def get_image():
