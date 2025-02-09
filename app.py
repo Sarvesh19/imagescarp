@@ -1,33 +1,63 @@
 from flask import Flask, request, jsonify
-import requests
-from bs4 import BeautifulSoup
-from flask_cors import CORS
-
+from httpx import get
+from selectolax.parser import HTMLParser
 
 app = Flask(__name__)
-CORS(app) 
 
+def fetch_unsplash_image_url(search_term):
+    """
+    Scrapes Unsplash for image URLs based on the search term.
+    Returns the first high-resolution image URL.
+    """
+    if not search_term:
+        raise ValueError("Search term is required")
 
-app = Flask(__name__)
-def get_google_image(place):
-    search_url = f"https://www.google.com/search?tbm=isch&q={place.replace(' ', '+')}"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    
-    response = requests.get(search_url, headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
-    
-    img_tags = soup.find_all("img")
-    image_urls = [img["src"] for img in img_tags if "http" in img["src"]]
-    return image_urls[0] if image_urls else None  # Returns first valid image URL
+    # Construct the Unsplash search URL
+    url = f"https://unsplash.com/s/photos/{search_term.replace(' ', '-')}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
+
+    # Send a GET request to Unsplash
+    response = get(url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch data from Unsplash. Status code: {response.status_code}")
+
+    # Parse the HTML response
+    tree = HTMLParser(response.text)
+
+    # Find all image tags
+    image_nodes = tree.css("figure a img")
+    if not image_nodes:
+        raise Exception("No images found on the page")
+
+    # Extract image URLs
+    image_urls = [img.attrs.get("src") for img in image_nodes if img.attrs.get("src")]
+
+    # Filter out low-quality or irrelevant images
+    filtered_urls = [url for url in image_urls if not any(kw in url for kw in ["premium", "profile", "plus", "data:image"])]
+
+    if not filtered_urls:
+        raise Exception("No valid image URLs found")
+
+    # Return the first high-resolution image URL
+    return filtered_urls[0].split("?")[0]
+
 @app.route("/get-image", methods=["GET"])
 def get_image():
+    """
+    API endpoint to fetch an image URL based on a search term (place).
+    """
     place = request.args.get("place")
     if not place:
-        return jsonify({"error": "Place is required"}), 400
-    image_url = get_google_image(place)
-    if image_url:
+        return jsonify({"error": "Place parameter is required"}), 400
+
+    try:
+        # Fetch the image URL from Unsplash
+        image_url = fetch_unsplash_image_url(place)
         return jsonify({"place": place, "image_url": image_url})
-    else:
-        return jsonify({"error": "No image found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)
