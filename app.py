@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 import requests
 from bs4 import BeautifulSoup
 app = Flask(__name__)
+CORS(app)  
+
 def get_google_image(place):
     search_url = f"https://www.google.com/search?tbm=isch&q={place.replace(' ', '+')}"
     headers = {"User-Agent": "Mozilla/5.0"}
