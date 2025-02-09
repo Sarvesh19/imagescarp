@@ -4,6 +4,7 @@ from selectolax.parser import HTMLParser
 import os
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 class ImageScraper:
     def __init__(self, search_term):
