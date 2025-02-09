@@ -16,14 +16,14 @@ def get_image_url(search_query):
     
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    image = soup.find('img', {'srcset': True})
-    if image:
-        # Extract URL from srcset and pick the highest resolution image
-        srcset = image['srcset'].split(',')
-        highest_res_url = srcset[-1].split(' ')[0]
-        return highest_res_url
-    else:
-        return None  # No image found
+    # Find the first image in the grid
+    grid_div = soup.find('div', {'data-testid': 'masonry-grid-count-three'})
+    if grid_div:
+        image_div = grid_div.find('img')
+        if image_div:
+            image_url = image_div.get('srcset').split(' ')[0]
+            return image_url
+    return None  # No image found
 
 @app.route("/get-image", methods=["GET"])
 def get_image():
