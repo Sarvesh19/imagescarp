@@ -1,5 +1,7 @@
 Flask
-flask_cors
 requests
 beautifulsoup4
+flask-cors
 gunicorn
+selenium
+webdriver-manager
