@@ -19,10 +19,14 @@ def get_image_url(search_query):
     # Find the first image in the grid
     grid_div = soup.find('div', {'data-testid': 'masonry-grid-count-three'})
     if grid_div:
-        image_div = grid_div.find('img')
-        if image_div:
-            image_url = image_div.get('srcset').split(' ')[0]
-            return image_url
+        # Find all figure tags with photo-grid-masonry-figure data-testid
+        figures = grid_div.find_all('figure', {'data-testid': 'photo-grid-masonry-figure'})
+        if figures:
+            for figure in figures:
+                image = figure.find('img', {'srcset': True})
+                if image:
+                    image_url = image['srcset'].split(' ')[0]
+                    return image_url
     return None  # No image found
 
 @app.route("/get-image", methods=["GET"])
