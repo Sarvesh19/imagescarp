@@ -9,24 +9,26 @@ CORS(app)  # Enable CORS for all routes
 def get_image_url(search_query):
     """Scrapes the first image URL from Unsplash search results."""
     search_url = f"https://unsplash.com/s/photos/{search_query.replace(' ', '-')}"
-    
-    response = requests.get(search_url)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
+
+    response = requests.get(search_url, headers=headers)
     if response.status_code != 200:
         return None  # Request failed
-    
+
     soup = BeautifulSoup(response.text, 'html.parser')
-    
+
     # Find the first image in the grid
-    grid_div = soup.find('div', {'data-testid': 'masonry-grid-count-three'})
-    if grid_div:
-        # Find all figure tags with photo-grid-masonry-figure data-testid
-        figures = grid_div.find_all('figure', {'data-testid': 'photo-grid-masonry-figure'})
-        if figures:
-            for figure in figures:
-                image = figure.find('img', {'srcset': True})
-                if image:
-                    image_url = image['srcset'].split(' ')[0]
-                    return image_url
+    img_tag = soup.find('img', {'class': 'YVj9w'})  # Class name for images on Unsplash
+    if img_tag:
+        # Extract the image URL from the srcset attribute
+        srcset = img_tag.get('srcset')
+        if srcset:
+            # Get the highest resolution image from the srcset
+            image_url = srcset.split(',')[-1].strip().split(' ')[0]
+            return image_url
+
     return None  # No image found
 
 @app.route("/get-image", methods=["GET"])
