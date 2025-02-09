@@ -4,17 +4,20 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+
+# ✅ Fix: Set the Chrome binary path for Render
+CHROME_BINARY_PATH = "/opt/render/project/chrome/chrome"
 
 def get_google_hd_image(place):
     """ Scrapes high-quality images from Google Images using Selenium. """
 
     # ✅ Set up Selenium with headless Chrome
     options = Options()
+    options.binary_location = CHROME_BINARY_PATH  # ✅ Tell Selenium where Chrome is installed
     options.add_argument("--headless")  # Run in the background
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
@@ -32,7 +35,7 @@ def get_google_hd_image(place):
     time.sleep(2)
 
     # ✅ Extract all HD images
-    image_elements = driver.find_elements(By.CSS_SELECTOR, "img")
+    image_elements = driver.find_elements("css selector", "img")
 
     hd_images = []
     for img in image_elements:
