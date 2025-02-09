@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
-import re
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -19,8 +18,10 @@ def get_image_url(search_query):
     
     image = soup.find('img', {'srcset': True})
     if image:
-        image_url = image['srcset'].split(' ')[0]
-        return image_url
+        # Extract URL from srcset and pick the highest resolution image
+        srcset = image['srcset'].split(',')
+        highest_res_url = srcset[-1].split(' ')[0]
+        return highest_res_url
     else:
         return None  # No image found
 
