@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from httpx import get
+from flask_cors import CORS
 from selectolax.parser import HTMLParser
 import os
 
