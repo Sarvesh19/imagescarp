@@ -6,30 +6,17 @@ from bs4 import BeautifulSoup
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-def get_image_url(search_query):
-    """Scrapes the first image URL from Unsplash search results."""
-    search_url = f"https://unsplash.com/s/photos/{search_query.replace(' ', '-')}"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
-    }
+def get_google_hd_image(search_query):
+    api_key = "5fa6a7232952b984c0b1775a35bfcde9e4758741	"
+    cx = "c5134144fd2164e06"
+    url = f"https://www.googleapis.com/customsearch/v1?q={search_query}&searchType=image&key={api_key}&cx={cx}"
 
-    response = requests.get(search_url, headers=headers)
-    if response.status_code != 200:
-        return None  # Request failed
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Find the first image in the grid
-    img_tag = soup.find('img', {'class': 'YVj9w'})  # Class name for images on Unsplash
-    if img_tag:
-        # Extract the image URL from the srcset attribute
-        srcset = img_tag.get('srcset')
-        if srcset:
-            # Get the highest resolution image from the srcset
-            image_url = srcset.split(',')[-1].strip().split(' ')[0]
-            return image_url
-
-    return None  # No image found
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if "items" in data:
+            return data["items"][0]["link"]  # Return the first HD image URL
+    return None
 
 @app.route("/get-image", methods=["GET"])
 def get_image():
@@ -37,7 +24,7 @@ def get_image():
     if not place:
         return jsonify({"error": "Place is required"}), 400
 
-    image_url = get_image_url(place)
+    image_url = get_google_hd_image(place)
 
     if image_url:
         return jsonify({"place": place, "image_url": image_url})
