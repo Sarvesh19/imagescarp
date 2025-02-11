@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 app = Flask(__name__)
+CORS(app)
 
 def scrape_unsplash(query):
     url = f"https://unsplash.com/s/photos/{query}"
